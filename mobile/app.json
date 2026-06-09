@@ -23,9 +23,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store",
-      "expo-notifications",
-      "freerasp-react-native"
+      "expo-secure-store"
     ]
   }
 }

@@ -1,10 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text } from "react-native";
-import { useFreeRasp } from "freerasp-react-native";
-import type { ThreatEventActions, TalsecConfig } from "freerasp-react-native";
 
 import HomeScreen from "./screens/HomeScreen";
 import ScanURLScreen from "./screens/ScanURLScreen";
@@ -39,56 +37,9 @@ function TabIcon({ routeName, focused }: { routeName: string; focused: boolean }
 export default function App() {
   const [secStatus, setSecStatus] = useState<SecurityStatus>(initialSecurityStatus);
 
-  const addThreat = useCallback((threatName: string) => {
-    setSecStatus((prev) => ({
-      ...prev,
-      isDeviceSecure: false,
-      threats: prev.threats.includes(threatName) ? prev.threats : [...prev.threats, threatName],
-    }));
+  useEffect(() => {
+    setSecStatus((prev) => ({ ...prev, allChecksDone: true }));
   }, []);
-
-  const config: TalsecConfig = {
-    androidConfig: {
-      packageName: "com.threatdetector.app",
-      certificateHashes: [],
-      supportedAlternativeStores: [],
-    },
-    iosConfig: {
-      appBundleId: "com.threatdetector.app",
-      appTeamId: "",
-    },
-    watcherMail: "",
-    isProd: false,
-  };
-
-  const threatActions: ThreatEventActions = {
-    privilegedAccess: () => addThreat("Root/Jailbreak detected"),
-    debug: () => addThreat("Debugger attached"),
-    simulator: () => addThreat("Emulator/Simulator detected"),
-    appIntegrity: () => addThreat("App tampering detected"),
-    unofficialStore: () => addThreat("Unofficial store install"),
-    hooks: () => addThreat("Hooking framework detected"),
-    deviceBinding: () => addThreat("Device binding mismatch"),
-    passcode: () => addThreat("No passcode set"),
-    secureHardwareNotAvailable: () => addThreat("Secure hardware unavailable"),
-    obfuscationIssues: () => addThreat("Obfuscation issues"),
-    devMode: () => addThreat("Developer mode enabled"),
-    systemVPN: () => addThreat("VPN detected"),
-    malware: () => addThreat("Malware detected"),
-    adbEnabled: () => addThreat("ADB enabled"),
-    screenshot: () => addThreat("Screenshot detected"),
-    screenRecording: () => addThreat("Screen recording detected"),
-    timeSpoofing: () => addThreat("Time spoofing detected"),
-    locationSpoofing: () => addThreat("Location spoofing detected"),
-    unsecureWifi: () => addThreat("Unsecured WiFi"),
-    automation: () => addThreat("Automation tool detected"),
-  };
-
-  useFreeRasp(config, threatActions, {
-    allChecksFinished: () => {
-      setSecStatus((prev) => ({ ...prev, allChecksDone: true }));
-    },
-  });
 
   return (
     <SecurityContext.Provider value={secStatus}>

@@ -5,6 +5,8 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import httpx
 import google.generativeai as genai
@@ -497,6 +499,22 @@ async def chat(request: ChatRequest):
     response = chat_session.send_message(request.message)
     return ChatResponse(reply=response.text)
 
+
+WEB_DIST = os.path.join(os.path.dirname(__file__), "web-dist")
+if os.path.isdir(WEB_DIST):
+    app.mount("/_expo", StaticFiles(directory=os.path.join(WEB_DIST, "_expo")), name="expo-assets")
+    app.mount("/assets", StaticFiles(directory=os.path.join(WEB_DIST, "assets")), name="web-assets")
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon():
+        return HTMLResponse(open(os.path.join(WEB_DIST, "favicon.ico"), "rb").read(), media_type="image/x-icon")
+
+    @app.api_route("/{path:path}", include_in_schema=False)
+    async def serve_web(path: str):
+        if path.startswith("api/"):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
+        return HTMLResponse(open(os.path.join(WEB_DIST, "index.html"), encoding="utf-8").read())
 
 if __name__ == "__main__":
     import uvicorn

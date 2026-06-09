@@ -1,7 +1,26 @@
-import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HISTORY_KEY = "scan_history";
+
+let webFallback: Record<string, string> = {};
+
+async function secureSet(key: string, value: string): Promise<void> {
+  try {
+    const SecureStore = require("expo-secure-store");
+    await SecureStore.setItemAsync(key, value);
+  } catch {
+    webFallback[key] = value;
+  }
+}
+
+async function secureGet(key: string): Promise<string | null> {
+  try {
+    const SecureStore = require("expo-secure-store");
+    return await SecureStore.getItemAsync(key);
+  } catch {
+    return webFallback[key] ?? null;
+  }
+}
 
 export interface HistoryItem {
   id: string;
@@ -14,11 +33,11 @@ export interface HistoryItem {
 }
 
 export async function saveApiKey(key: string, value: string): Promise<void> {
-  await SecureStore.setItemAsync(key, value);
+  await secureSet(key, value);
 }
 
 export async function getApiKey(key: string): Promise<string | null> {
-  return SecureStore.getItemAsync(key);
+  return secureGet(key);
 }
 
 export async function addHistory(item: Omit<HistoryItem, "id" | "timestamp">): Promise<void> {
