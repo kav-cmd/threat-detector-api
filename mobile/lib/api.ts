@@ -1,4 +1,4 @@
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8001";
+const API_BASE = "https://threat-detector-api-1.onrender.com";
 
 export interface URLScanResult {
   url: string;

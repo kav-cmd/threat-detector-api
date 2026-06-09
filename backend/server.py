@@ -27,7 +27,7 @@ SUSPICIOUS_TLDS = {
     ".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".top", ".work",
     ".date", ".loan", ".men", ".click", ".download", ".review",
     ".stream", ".trade", ".webcam", ".bid", ".win", ".science",
-    ".party", ".racing", ".pw", ".country", ".faith",
+    ".party", ".racing", ".pw", ".country", ".faith", ".lol",
 }
 
 BRAND_KEYWORDS = [
@@ -47,9 +47,10 @@ PHISHING_KEYWORDS = {
         "bank account number", "atm pin", "cvv", "card number",
     ],
     "high": [
-        "verify your account", "confirm your identity", "suspended",
-        "unusual activity", "security alert", "account locked",
+        "verify your account", "confirm your identity", "verify your identity",
+        "suspended", "unusual activity", "security alert", "account locked",
         "unauthorized access", "update your payment",
+        "your account has been", "click here to verify",
     ],
     "medium": [
         "wire transfer", "western union", "money gram",
@@ -131,7 +132,7 @@ def heuristic_url_scan(url: str) -> tuple[int, list[str]]:
 
     for tld in SUSPICIOUS_TLDS:
         if domain.endswith(tld):
-            score += 25
+            score += 30
             flags.append(f"Suspicious TLD: {tld}")
             break
 
