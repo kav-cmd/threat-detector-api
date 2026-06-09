@@ -502,19 +502,31 @@ async def chat(request: ChatRequest):
 
 WEB_DIST = os.path.join(os.path.dirname(__file__), "web-dist")
 if os.path.isdir(WEB_DIST):
-    app.mount("/_expo", StaticFiles(directory=os.path.join(WEB_DIST, "_expo")), name="expo-assets")
-    app.mount("/assets", StaticFiles(directory=os.path.join(WEB_DIST, "assets")), name="web-assets")
+    expo_dir = os.path.join(WEB_DIST, "_expo")
+    if os.path.isdir(expo_dir):
+        app.mount("/_expo", StaticFiles(directory=expo_dir), name="expo-assets")
+    assets_dir = os.path.join(WEB_DIST, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="web-assets")
+
+    favicon_path = os.path.join(WEB_DIST, "favicon.ico")
+    index_path = os.path.join(WEB_DIST, "index.html")
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
-        return HTMLResponse(open(os.path.join(WEB_DIST, "favicon.ico"), "rb").read(), media_type="image/x-icon")
+        if os.path.isfile(favicon_path):
+            return HTMLResponse(open(favicon_path, "rb").read(), media_type="image/x-icon")
+        return HTMLResponse("", status_code=404)
 
     @app.api_route("/{path:path}", include_in_schema=False)
     async def serve_web(path: str):
         if path.startswith("api/"):
             from fastapi.responses import JSONResponse
             return JSONResponse(status_code=404, content={"detail": "Not found"})
-        return HTMLResponse(open(os.path.join(WEB_DIST, "index.html"), encoding="utf-8").read())
+        if os.path.isfile(index_path):
+            return HTMLResponse(open(index_path, encoding="utf-8").read())
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=404, content={"detail": "Web app not built"})
 
 if __name__ == "__main__":
     import uvicorn
