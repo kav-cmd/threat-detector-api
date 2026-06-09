@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { healthCheck } from "../lib/api";
 import { getHistory } from "../lib/storage";
+import { useSecurityStatus } from "../lib/security";
 
 export default function HomeScreen({ navigation }: any) {
   const [serverStatus, setServerStatus] = useState<string>("checking...");
   const [recentScans, setRecentScans] = useState(0);
+  const { isDeviceSecure, threats, allChecksDone } = useSecurityStatus();
 
   useEffect(() => {
     healthCheck()
@@ -22,6 +24,23 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.statusCard}>
         <View style={[styles.dot, { backgroundColor: serverStatus === "connected" ? "#22c55e" : "#ef4444" }]} />
         <Text style={styles.statusText}>Server: {serverStatus}</Text>
+      </View>
+
+      <View style={[styles.statusCard, { borderLeftColor: isDeviceSecure ? "#22c55e" : "#ef4444", borderLeftWidth: 4 }]}>
+        <Text style={[styles.statusText, { fontWeight: "600" }]}>
+          {allChecksDone
+            ? isDeviceSecure
+              ? "Device: Secure ✅"
+              : `Device: ${threats.length} threat(s) 🚨`
+            : "Checking device security..."}
+        </Text>
+        {threats.length > 0 && (
+          <View style={styles.threatList}>
+            {threats.map((t, i) => (
+              <Text key={i} style={styles.threatItem}>• {t}</Text>
+            ))}
+          </View>
+        )}
       </View>
 
       <View style={styles.statsRow}>
@@ -52,16 +71,16 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: "bold", color: "#f8fafc", marginTop: 20 },
   subtitle: { fontSize: 14, color: "#94a3b8", marginBottom: 24 },
   statusCard: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 12,
     width: "100%",
     marginBottom: 16,
   },
-  dot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
-  statusText: { color: "#cbd5e1", fontSize: 16 },
+  dot: { width: 10, height: 10, borderRadius: 5, marginRight: 8, position: "absolute", left: 16, top: 20 },
+  statusText: { color: "#cbd5e1", fontSize: 16, marginLeft: 18 },
+  threatList: { marginTop: 8, marginLeft: 18 },
+  threatItem: { color: "#ef4444", fontSize: 12, marginBottom: 2 },
   statsRow: { flexDirection: "row", marginBottom: 24, width: "100%" },
   statBox: {
     flex: 1,
