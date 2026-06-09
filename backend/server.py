@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
+import google.generativeai as genai
 
 load_dotenv()
 
@@ -22,6 +23,9 @@ app.add_middleware(
 
 VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
 GOOGLE_SAFE_BROWSING_KEY = os.getenv("GOOGLE_SAFE_BROWSING_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 SUSPICIOUS_TLDS = {
     ".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".top", ".work",
@@ -96,6 +100,19 @@ class MessageScanResult(BaseModel):
     risk_level: str
     flags: list[str]
     phishing_indicators: list[str]
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list[dict] = []
+
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
+class GuidesResponse(BaseModel):
+    guides: list[dict]
 
 
 class HealthResponse(BaseModel):
@@ -329,6 +346,156 @@ async def scan_message(request: ScanMessageRequest):
         flags=flags,
         phishing_indicators=phishing_indicators,
     )
+
+
+CYBER_GUIDES = [
+    {
+        "id": "phishing",
+        "title": "Phishing Detection",
+        "icon": "🎣",
+        "summary": "How to spot phishing emails, messages, and websites",
+        "rules": [
+            "Check the sender's email address carefully — look for misspellings",
+            "Hover over links before clicking to see the real URL",
+            "Never share passwords, OTPs, or card details via email/SMS",
+            "Urgent language like 'act now' or 'account suspended' is a red flag",
+            "Legitimate companies never ask for sensitive info via email",
+            "Verify suspicious messages by contacting the company directly",
+            "Watch for generic greetings like 'Dear Customer' instead of your name",
+        ],
+        "examples": [
+            "fake-support@paypa1.com",
+            "http://secure-login.xyz/verify",
+            "URGENT: Your account will be closed",
+        ],
+    },
+    {
+        "id": "safe-browsing",
+        "title": "Safe Browsing",
+        "icon": "🌐",
+        "summary": "Best practices for staying safe online",
+        "rules": [
+            "Always look for HTTPS (lock icon) before entering data",
+            "Don't download files from untrusted sources",
+            "Use a password manager to generate unique passwords",
+            "Enable two-factor authentication (2FA) everywhere",
+            "Keep your browser and OS updated",
+            "Avoid using public WiFi for banking transactions",
+            "Clear cookies and cache regularly",
+        ],
+        "examples": [
+            "Check for https:// before entering passwords",
+            "Use VPN on public WiFi",
+            "Never save passwords in browser",
+        ],
+    },
+    {
+        "id": "password-security",
+        "title": "Password Security",
+        "icon": "🔑",
+        "summary": "Create and manage strong passwords",
+        "rules": [
+            "Use at least 12 characters with mix of letters, numbers, symbols",
+            "Never reuse passwords across different sites",
+            "Use a password manager (Bitwarden, 1Password, etc.)",
+            "Enable 2FA on all accounts that support it",
+            "Change passwords immediately if a service is breached",
+            "Avoid using personal info (birthdays, names) in passwords",
+            "Use passphrases: 'correct-horse-battery-staple' style",
+        ],
+        "examples": [
+            "Weak: password123",
+            "Better: MyD0g!sFluffy2024",
+            "Best: correct-horse-battery-staple",
+        ],
+    },
+    {
+        "id": "social-engineering",
+        "title": "Social Engineering",
+        "icon": "🧠",
+        "summary": "Recognize manipulation tactics used by scammers",
+        "rules": [
+            "Be skeptical of unsolicited calls asking for personal info",
+            "Scammers create false urgency to pressure you",
+            "Verify identity through official channels, not contact info provided",
+            "Beware of 'too good to be true' offers and prizes",
+            "Never let remote access to your computer from strangers",
+            "Romance scammers build trust before asking for money",
+            "CEO fraud: verify wire transfer requests via phone call",
+        ],
+        "examples": [
+            "Fake IRS call threatening arrest",
+            "Nigerian prince inheritance scam",
+            "Fake tech support asking for remote access",
+        ],
+    },
+    {
+        "id": "mobile-security",
+        "title": "Mobile Security",
+        "icon": "📱",
+        "summary": "Protect your phone from threats",
+        "rules": [
+            "Only install apps from official app stores",
+            "Review app permissions regularly",
+            "Keep your phone OS and apps updated",
+            "Use biometric lock (fingerprint/face) plus PIN",
+            "Don't jailbreak or root your device",
+            "Beware of SMS phishing (smishing)",
+            "Turn off Bluetooth and WiFi when not in use",
+        ],
+        "examples": [
+            "Check app permissions in Settings",
+            "Enable Find My Device (Android) / Find My (iOS)",
+            "Don't click links in SMS from unknown numbers",
+        ],
+    },
+    {
+        "id": "network-security",
+        "title": "Network Security",
+        "icon": "🔒",
+        "summary": "Secure your home and public network usage",
+        "rules": [
+            "Change your router's default admin password",
+            "Use WPA3 (or WPA2) encryption on WiFi",
+            "Disable WPS on your router",
+            "Use a firewall on your devices",
+            "Consider a VPN for public WiFi",
+            "Regularly update router firmware",
+            "Segment IoT devices on a separate network",
+        ],
+        "examples": [
+            "Router admin: change from 'admin/admin'",
+            "Use VPN on coffee shop WiFi",
+            "Smart lights on separate guest network",
+        ],
+    },
+]
+
+
+@app.get("/api/guides", response_model=GuidesResponse)
+async def get_guides():
+    return GuidesResponse(guides=CYBER_GUIDES)
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    if not GEMINI_API_KEY:
+        return ChatResponse(reply="⚠️ Gemini API key not configured. Ask the app owner to add GEMINI_API_KEY in Render settings.")
+
+    model = genai.GenerativeModel(
+        "gemini-2.0-flash",
+        system_instruction=(
+            "You are a cybersecurity expert assistant. Answer questions about "
+            "phishing, malware, online safety, password security, social engineering, "
+            "and general cybersecurity threats. Keep answers clear, practical, and "
+            "actionable. If asked about something outside cybersecurity, politely "
+            "redirect back to security topics. Be concise — 2-3 paragraphs max."
+        ),
+    )
+
+    chat_session = model.start_chat(history=request.history)
+    response = chat_session.send_message(request.message)
+    return ChatResponse(reply=response.text)
 
 
 if __name__ == "__main__":

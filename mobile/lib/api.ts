@@ -23,6 +23,19 @@ export interface HealthCheck {
   version: string;
 }
 
+export interface Guide {
+  id: string;
+  title: string;
+  icon: string;
+  summary: string;
+  rules: string[];
+  examples: string[];
+}
+
+export interface ChatResponse {
+  reply: string;
+}
+
 async function request<T>(path: string, body: object): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -48,4 +61,15 @@ export async function healthCheck(): Promise<HealthCheck> {
   const response = await fetch(`${API_BASE}/api/health`);
   if (!response.ok) throw new Error("Health check failed");
   return response.json();
+}
+
+export async function getGuides(): Promise<Guide[]> {
+  const response = await fetch(`${API_BASE}/api/guides`);
+  if (!response.ok) throw new Error("Failed to load guides");
+  const data = await response.json();
+  return data.guides;
+}
+
+export async function chatWithGemini(message: string, history: { role: string; parts: { text: string }[] }[]): Promise<ChatResponse> {
+  return request<ChatResponse>("/api/chat", { message, history });
 }
