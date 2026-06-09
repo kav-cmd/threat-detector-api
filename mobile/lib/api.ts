@@ -1,0 +1,51 @@
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8001";
+
+export interface URLScanResult {
+  url: string;
+  risk_score: number;
+  risk_level: "safe" | "suspicious" | "dangerous";
+  flags: string[];
+  vt_malicious: number | null;
+  vt_suspicious: number | null;
+  gsb_threat: boolean | null;
+}
+
+export interface MessageScanResult {
+  message: string;
+  risk_score: number;
+  risk_level: "safe" | "suspicious" | "dangerous";
+  flags: string[];
+  phishing_indicators: string[];
+}
+
+export interface HealthCheck {
+  status: string;
+  version: string;
+}
+
+async function request<T>(path: string, body: object): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`API error ${response.status}: ${err}`);
+  }
+  return response.json();
+}
+
+export async function scanURL(url: string): Promise<URLScanResult> {
+  return request<URLScanResult>("/api/scan-url", { url });
+}
+
+export async function scanMessage(message: string): Promise<MessageScanResult> {
+  return request<MessageScanResult>("/api/scan-message", { message });
+}
+
+export async function healthCheck(): Promise<HealthCheck> {
+  const response = await fetch(`${API_BASE}/api/health`);
+  if (!response.ok) throw new Error("Health check failed");
+  return response.json();
+}
