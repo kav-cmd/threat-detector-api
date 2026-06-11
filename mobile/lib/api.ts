@@ -1,11 +1,11 @@
-const API_BASE = "https://threat-detector-api-1.onrender.com";
-const _0x1 = atob("QVEuQWI4" + "Uk42S1A5" + "aDlBQ01W" + "SG4zX0JW" + "QW02RFJs" + "U1R1Tnhx" + "eGZlY25y" + "bnRuVkla" + "V0N0WEE=");
+const API_BASE = "https://threat-detector-api.onrender.com";
 
 export interface URLScanResult {
   url: string;
   risk_score: number;
   risk_level: "safe" | "suspicious" | "dangerous";
   flags: string[];
+  ml_confidence?: number | null;
   vt_malicious: number | null;
   vt_suspicious: number | null;
   gsb_threat: boolean | null;
@@ -17,11 +17,14 @@ export interface MessageScanResult {
   risk_level: "safe" | "suspicious" | "dangerous";
   flags: string[];
   phishing_indicators: string[];
+  ml_phishing_probability?: number | null;
+  ml_safe_probability?: number | null;
 }
 
 export interface HealthCheck {
   status: string;
   version: string;
+  uptime: number;
 }
 
 export interface Guide {
@@ -37,11 +40,11 @@ export interface ChatResponse {
   reply: string;
 }
 
-async function request<T>(path: string, body: object): Promise<T> {
+async function request<T>(path: string, body?: object): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
+    method: body ? "POST" : "GET",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!response.ok) {
     const err = await response.text();
@@ -71,6 +74,9 @@ export async function getGuides(): Promise<Guide[]> {
   return data.guides;
 }
 
-export async function chatWithGemini(message: string, history: { role: string; parts: { text: string }[] }[]): Promise<ChatResponse> {
-  return request<ChatResponse>("/api/chat", { message, history, gemini_key: _0x1 });
+export async function chatWithGemini(
+  message: string,
+  history: { role: string; parts: { text: string }[] }[]
+): Promise<ChatResponse> {
+  return request<ChatResponse>("/api/chat", { message, history });
 }

@@ -11,6 +11,8 @@ __pycache__/
 venv/
 *.log
 .DS_Store
+backend/audit.log
+backend/phishing_model.pkl
 
 # Allow web-dist assets directory to exist in git
 !backend/web-dist/assets/
