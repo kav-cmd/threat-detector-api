@@ -482,7 +482,7 @@ async def get_guides():
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     if not GEMINI_API_KEY:
-        return ChatResponse(reply="⚠️ Gemini API key not configured. Ask the app owner to add GEMINI_API_KEY in Render settings.")
+        return ChatResponse(reply="⚠️ Gemini API key not configured. Chatbot unavailable.")
 
     model = genai.GenerativeModel(
         "gemini-2.0-flash",
