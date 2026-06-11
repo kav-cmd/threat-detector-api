@@ -486,21 +486,27 @@ async def chat(request: ChatRequest):
     if not api_key:
         return ChatResponse(reply="⚠️ Gemini API key not configured. Add it in Settings tab or ask the app owner to set GEMINI_API_KEY.")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        "gemini-2.0-flash",
-        system_instruction=(
-            "You are a cybersecurity expert assistant. Answer questions about "
-            "phishing, malware, online safety, password security, social engineering, "
-            "and general cybersecurity threats. Keep answers clear, practical, and "
-            "actionable. If asked about something outside cybersecurity, politely "
-            "redirect back to security topics. Be concise — 2-3 paragraphs max."
-        ),
-    )
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            "gemini-2.0-flash",
+            system_instruction=(
+                "You are a cybersecurity expert assistant. Answer questions about "
+                "phishing, malware, online safety, password security, social engineering, "
+                "and general cybersecurity threats. Keep answers clear, practical, and "
+                "actionable. If asked about something outside cybersecurity, politely "
+                "redirect back to security topics. Be concise — 2-3 paragraphs max."
+            ),
+        )
 
-    chat_session = model.start_chat(history=request.history)
-    response = chat_session.send_message(request.message)
-    return ChatResponse(reply=response.text)
+        chat_session = model.start_chat(history=request.history)
+        response = chat_session.send_message(request.message)
+        return ChatResponse(reply=response.text)
+    except Exception as e:
+        err = str(e)
+        if "quota" in err.lower() or "resource_exhausted" in err.lower():
+            return ChatResponse(reply="⚠️ Gemini API rate limit reached. The free daily quota for this API key is exhausted. Go to aistudio.google.com/apikey to create a new key, then paste it in Settings tab.")
+        return ChatResponse(reply=f"⚠️ AI error: {err[:200]}")
 
 
 WEB_DIST = os.path.join(os.path.dirname(__file__), "web-dist")
