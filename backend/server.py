@@ -107,6 +107,7 @@ class MessageScanResult(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[dict] = []
+    gemini_key: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -481,9 +482,11 @@ async def get_guides():
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    if not GEMINI_API_KEY:
-        return ChatResponse(reply="⚠️ Gemini API key not configured. Chatbot unavailable.")
+    api_key = request.gemini_key or GEMINI_API_KEY
+    if not api_key:
+        return ChatResponse(reply="⚠️ Gemini API key not configured. Add it in Settings tab or ask the app owner to set GEMINI_API_KEY.")
 
+    genai.configure(api_key=api_key)
     model = genai.GenerativeModel(
         "gemini-2.0-flash",
         system_instruction=(

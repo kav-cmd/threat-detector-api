@@ -70,6 +70,6 @@ export async function getGuides(): Promise<Guide[]> {
   return data.guides;
 }
 
-export async function chatWithGemini(message: string, history: { role: string; parts: { text: string }[] }[]): Promise<ChatResponse> {
-  return request<ChatResponse>("/api/chat", { message, history });
+export async function chatWithGemini(message: string, history: { role: string; parts: { text: string }[] }[], geminiKey?: string): Promise<ChatResponse> {
+  return request<ChatResponse>("/api/chat", { message, history, gemini_key: geminiKey || null });
 }
