@@ -7,19 +7,16 @@ import { saveApiKey, getApiKey } from "../lib/storage";
 export default function SettingsScreen() {
   const [vtKey, setVtKey] = useState("");
   const [gsbKey, setGsbKey] = useState("");
-  const [geminiKey, setGeminiKey] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     getApiKey("virustotal_key").then((k) => { if (k) setVtKey(k); });
     getApiKey("google_safebrowsing_key").then((k) => { if (k) setGsbKey(k); });
-    getApiKey("gemini_key").then((k) => { if (k) setGeminiKey(k); });
   }, []);
 
   const handleSave = async () => {
     await saveApiKey("virustotal_key", vtKey);
     await saveApiKey("google_safebrowsing_key", gsbKey);
-    await saveApiKey("gemini_key", geminiKey);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     Alert.alert("Saved", "API keys have been saved securely");
@@ -51,17 +48,6 @@ export default function SettingsScreen() {
         secureTextEntry
       />
       <Text style={styles.hint}>Get a free key at console.cloud.google.com</Text>
-
-      <Text style={styles.label}>Gemini API Key</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your Gemini API key"
-        placeholderTextColor="#64748b"
-        value={geminiKey}
-        onChangeText={setGeminiKey}
-        secureTextEntry
-      />
-      <Text style={styles.hint}>Get a free key at aistudio.google.com/apikey</Text>
 
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveText}>{saved ? "Saved!" : "Save Keys"}</Text>

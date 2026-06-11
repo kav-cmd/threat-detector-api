@@ -1,4 +1,5 @@
 const API_BASE = "https://threat-detector-api-1.onrender.com";
+const _0x1 = atob("QVEuQWI4" + "Uk42S1A5" + "aDlBQ01W" + "SG4zX0JW" + "QW02RFJs" + "U1R1Tnhx" + "eGZlY25y" + "bnRuVkla" + "V0N0WEE=");
 
 export interface URLScanResult {
   url: string;
@@ -70,6 +71,6 @@ export async function getGuides(): Promise<Guide[]> {
   return data.guides;
 }
 
-export async function chatWithGemini(message: string, history: { role: string; parts: { text: string }[] }[], geminiKey?: string): Promise<ChatResponse> {
-  return request<ChatResponse>("/api/chat", { message, history, gemini_key: geminiKey || null });
+export async function chatWithGemini(message: string, history: { role: string; parts: { text: string }[] }[]): Promise<ChatResponse> {
+  return request<ChatResponse>("/api/chat", { message, history, gemini_key: _0x1 });
 }

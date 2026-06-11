@@ -4,7 +4,6 @@ import {
   FlatList, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from "react-native";
 import { chatWithGemini } from "../lib/api";
-import { getApiKey } from "../lib/storage";
 
 interface Message {
   id: string;
@@ -34,7 +33,7 @@ export default function ChatbotScreen() {
 
     try {
       const geminiKey = await getApiKey("gemini_key") || undefined;
-      const res = await chatWithGemini(userMsg.text, history, geminiKey);
+      const res = await chatWithGemini(userMsg.text, history);
       const botMsg: Message = { id: (Date.now() + 1).toString(), role: "assistant", text: res.reply };
       setMessages((prev) => [...prev, botMsg]);
     } catch (e: any) {
