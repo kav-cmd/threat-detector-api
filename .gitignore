@@ -1,0 +1,19 @@
+node_modules/
+.expo/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.log
+.DS_Store
+backend/audit.log
+backend/phishing_model.pkl
+
+# Allow web-dist assets directory to exist in git
+!backend/web-dist/assets/
+!backend/web-dist/assets/.gitkeep
