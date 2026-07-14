@@ -10,15 +10,15 @@ An AI-powered cybersecurity threat detection system that analyzes security-relat
 
 
 
-\- 🔒 Machine Learning-based threat detection
+\- Machine Learning-based threat detection
 
-\- 🚀 RESTful API built with Python
+\- RESTful API built with Python
 
-\- 📊 Predicts and classifies potential cyber threats
+\- Predicts and classifies potential cyber threats
 
-\- 🌐 Supports web and mobile clients
+\- Supports web and mobile clients
 
-\- ⚙️ Environment-based configuration
+\- Environment-based configuration
 
 
 
